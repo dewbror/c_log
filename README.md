@@ -38,6 +38,6 @@ cmake --build .
 License
 -------
 
-The source code in this repository is licensed under the MIT License, see [LICENSE.txt](https://github.com/dewbror/c_log/blob/master/LICENSE.txt). This license applies only to the source code files.
+The source code in this repository is licensed under the MIT License, see [LICENSE.txt](https://github.com/dewbror/c_log/blob/master/LICENSE.txt). This license applies only to c_log.h.
 
 --- end of README ---
