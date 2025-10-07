@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 tests_exe="c_log_tests"
 
@@ -25,7 +25,7 @@ echo "Running ${tests}"
 "${tests}" || exit 1
 echo ""
 
-if [ "${dir}" == "./build_debwithcov" ]; then
+if [ "${dir}" = "./build_debwithcov" ]; then
     echo "Generating coverage info"
     lcov --capture --directory "${dir}/tests/CMakeFiles/c_log_tests.dir" --output-file "${dir}/coverage.info" > /dev/null 2>&1 || exit 1
     lcov --extract "${dir}/coverage.info" '*/c_log.h' --output-file "${dir}/coverage.c_log.info" 2>/dev/null || exit 1

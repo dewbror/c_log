@@ -1,6 +1,3 @@
-# Author: secty <dewb@duck.com>
-# Date Created: 1 Oct 2025
-
 # Specify minimum cmake version
 cmake_minimum_required(VERSION 3.5)
 

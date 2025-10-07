@@ -1,6 +1,3 @@
-# Author: William Brorsson <dewb@duck.com>
-# Date Created: Mars 26, 2025
-
 # Specify minimum cmake version
 cmake_minimum_required(VERSION 3.5)
 
@@ -35,7 +32,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 # Enable shared libraries globally
 set(BUILD_SHARED_LIBS ON)
 
-# Check if cmocka exist, if either one doesnt then run the dependency clone script
+# Check if cmocka exist, if not then run the dependency clone script
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/cmocka")
     message(STATUS "Running clone script...")
     execute_process(

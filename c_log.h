@@ -99,10 +99,6 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 #define C_LOG_TRACE(...) ((void)0)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
 #ifdef C_LOG_IMPLEMENTATION
 
 #include <stdbool.h>
@@ -120,50 +116,56 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 #define COLOR_CYAN   "\x1b[36m"
 #define COLOR_RESET  "\x1b[0m"
 
-// Global states NOT thread safe!!
-static bool logging_to_file = true;
-static FILE *fp_log = NULL;
-static const char *log_file_name = NULL;
+#define C_LOG_LEVEL_COUNT 5
 
-void c_log_open(const char *const file_name)
+// Global states NOT thread safe!!
+static bool C_LOG_logging_to_file = false;
+static FILE *C_LOG_fp = stderr;
+static const char *C_LOG_file_name = NULL;
+
+void c_log_open(const char *const p_file_name)
 {
-    // If file_name == NULL, set logging to stderr
-    if(file_name == NULL) {
-        fp_log = stderr;
-        logging_to_file = false;
+    // First check if we are already logging to file
+    if(C_LOG_logging_to_file)
         return;
-    }
+
+    // Null check file_name
+    if(p_file_name == NULL)
+        return;
 
     // If file_name != NULL, open it as logging file
-    fp_log = fopen(file_name, "w");
-    if(fp_log == NULL)
+    C_LOG_fp = fopen(p_file_name, "w");
+    if(C_LOG_fp == NULL)
         return;
 
     // Set the name of the log file
-    log_file_name = file_name;
-    logging_to_file = true;
+    C_LOG_file_name = p_file_name;
+    C_LOG_logging_to_file = true;
 
-    C_LOG_INFO("Log file opened '%s'", log_file_name);
+    C_LOG_INFO("Log file opened '%s'", C_LOG_file_name);
 }
 
 void c_log_close(void)
 {
-    if(!logging_to_file)
+    if(!C_LOG_logging_to_file)
         return;
 
-    C_LOG_DEBUG("Attempting to close log file '%s'", log_file_name);
+    C_LOG_DEBUG("Attempting to close log file '%s'", C_LOG_file_name);
 
     // Check if log_file is NULL
-    if(fp_log != NULL) {
-        // Close log_file
-        int ret = fclose(fp_log);
-        if(ret != 0)
-            return;
+    if(C_LOG_fp == NULL)
+        return;
 
-        // Set file ptr to default stderr
-        fp_log = NULL;
-        logging_to_file = false;
+    // Close log_file
+    int ret = fclose(C_LOG_fp);
+    if(ret != 0) {
+        C_LOG_DEBUG("Failed to close log file '%s'", C_LOG_file_name);
+        return;
     }
+
+    // Set file ptr to default stderr
+    C_LOG_fp = stderr;
+    C_LOG_logging_to_file = false;
 }
 
 void __c_log__msg(const uint8_t level, const char *const file, const int32_t line, const char *const func,
@@ -173,6 +175,10 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
     (void)file;
     (void)line;
 
+    // Null check fp_log
+    if(C_LOG_fp == NULL)
+        return;
+    
     int ret = 0;
     size_t ret_LU = 0;
     const char *color = NULL;
@@ -192,10 +198,8 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
         color = COLOR_BLUE;
         break;
     case C_LOG_LEVEL_TRACE:
-        color = COLOR_CYAN;
-        break;
     default:
-        color = COLOR_RESET;
+        color = COLOR_CYAN;
         break;
     }
 
@@ -212,47 +216,47 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
     char infobuf[INFOBUF_MAX];
     // ret = snprintf(infobuf, sizeof(infobuf), "%s:%d [%s]", file, line, func);
     ret = snprintf(infobuf, sizeof(infobuf), "[%s]", func);
-    // TODO: check if ret < INFOBUF_MAX, handle buffer to small error
+
+    // TODO: check if ret < INFOBUF_MAX?
     if(ret == 0)
         return;
 
-    if(fp_log == NULL) {
-        // If fp_log == NULL print an error directly to stderr.
-        // fprintf(stderr, "%s %s[ERROR]%s fp_log == NULL in logger.c\n", timebuf, COLOR_RED, COLOR_RESET);
-        return;
-    }
-
-    // Print date and time
+    // Print date, time, log-level and info
     static const char *const levels[] = {"[ERR] ", "[WRN] ", "[INF] ", "[DBG] ", "[TRC] "};
-    if(logging_to_file) {
-        ret = fprintf(fp_log, "%s %s", timebuf, levels[level]);
+    if(C_LOG_logging_to_file) {
+        ret = fprintf(C_LOG_fp, "%s %s%s", timebuf, levels[level % C_LOG_LEVEL_COUNT], infobuf);
         if(ret < 0)
             return;
     }
     else {
-        ret = fprintf(fp_log, "%s %s%s%s%s ", timebuf, color, levels[level], COLOR_RESET, infobuf);
+        ret = fprintf(C_LOG_fp, "%s %s%s%s%s ", timebuf, color, levels[level % C_LOG_LEVEL_COUNT], COLOR_RESET, infobuf);
         if(ret < 0)
             return;
     }
+    
+    // Null check format string
+    if(fmt == NULL)
+        goto NEWLINE;
 
-    if(fmt != NULL) {
-        // Initialize variable argument list
-        va_list args;
-        va_start(args, fmt);
+    // Initialize variable argument list
+    va_list args;
+    va_start(args, fmt);
 
-        // Print formatted string
-        ret = vfprintf(fp_log, fmt, args);
-        if(ret < 0) {
-            va_end(args);
-            return;
-        }
-
-        // Cleanup va lists
+    // Print formatted string
+    ret = vfprintf(C_LOG_fp, fmt, args);
+    if(ret < 0) {
         va_end(args);
+        goto NEWLINE;
     }
 
+    // Cleanup va lists
+    va_end(args);
+    
+
+NEWLINE:
+
     // Print newline
-    ret = fprintf(fp_log, "\n");
+    ret = fprintf(C_LOG_fp, "\n");
     if(ret < 0)
         return;
 }
@@ -267,7 +271,19 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 #undef COLOR_CYAN
 #undef COLOR_RESET
 
+#undef C_LOG_LEVEL_COUNT
+
 #endif // C_LOG_IMPLEMENTATION
+
+// #undef C_LOG_LEVEL_ERROR
+// #undef C_LOG_LEVEL_WARN
+// #undef C_LOG_LEVEL_INFO
+// #undef C_LOG_LEVEL_DEBUG
+// #undef C_LOG_LEVEL_TRACE
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // C_LOG_H_
 

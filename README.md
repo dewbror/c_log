@@ -20,9 +20,8 @@ In exactly ONE C/C++ file, do this:
 ```
 #define C_LOG_IMPLEMENTATION
 #include <c_log.h>
-#undef C_LOG_IMPLEMENTATION <-- not strictly necessary
 ```
-This will include all the function prototypes and definitions into that C/C++ file. Including the header without C_LOG_IMPLEMENTATION will only include the function prototypes and NOT their definitions. This is what you do everywhere else you wish to use c_log.h functions in your code.
+This will include all the function prototypes and definitions into that C/C++ file. Including the header without '#define C_LOG_IMPLEMENTATION' will only include the function prototypes and NOT their definitions. Do this where else you wish to use c_log.h functions in your code.
 
 How to Build and Run Tests (with cmake)
 ---------------------------------------

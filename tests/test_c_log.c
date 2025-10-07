@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 #include <stdarg.h>
 #include <setjmp.h>
 #include <cmocka.h>
@@ -10,11 +9,12 @@
 #include "c_log.h"
 
 #define BUFFER_SIZE 512
+#define TEMP_LOG_FILE "./temp.log"
 
 // Helper to read the log file into a buffer
 static void read_log_file(char *buffer, size_t bufsize)
 {
-    FILE *f = fopen("./cvk.log", "r");
+    FILE *f = fopen(TEMP_LOG_FILE, "r");
     assert_non_null(f);
     size_t n = fread(buffer, 1, bufsize - 1, f);
     buffer[n] = 0;
@@ -26,7 +26,7 @@ static int setup(void **state)
     // UNUSED
     (void)state;
 
-    c_log_open("./cvk.log");
+    c_log_open(TEMP_LOG_FILE);
 
     return 0;
 }
@@ -37,7 +37,7 @@ static int teardown(void **state)
     (void)state;
 
     c_log_close();
-    remove("./cvk.log");
+    remove(TEMP_LOG_FILE);
 
     return 0;
 }
@@ -48,9 +48,17 @@ static void test_log_file_creation(void **state)
     // UNUSED
     (void)state;
 
-    FILE *f = fopen("./cvk.log", "r");
+    FILE *f = fopen(TEMP_LOG_FILE, "r");
     assert_non_null(f);
+
     fclose(f);
+
+    c_log_close();
+
+    char buf[BUFFER_SIZE];
+    read_log_file(buf, sizeof(buf));
+    assert_true(strstr(buf, "[INF]") != NULL);
+    assert_true(strstr(buf, "Log file opened") != NULL);
 }
 
 static void test_log_message_written(void **state)
@@ -67,7 +75,7 @@ static void test_log_message_written(void **state)
     assert_true(strstr(buf, "[ERR] ") != NULL);
 }
 
-static void test_log_level_color_prefix(void **state)
+static void test_log_level_prefix(void **state)
 {
     // UNUSED
     (void)state;
@@ -91,7 +99,7 @@ static void test_log_level_color_prefix(void **state)
 const struct CMUnitTest logger_tests[] = {
     cmocka_unit_test_setup_teardown(test_log_file_creation, setup, teardown),
     cmocka_unit_test_setup_teardown(test_log_message_written, setup, teardown),
-    cmocka_unit_test_setup_teardown(test_log_level_color_prefix, setup, teardown),
+    cmocka_unit_test_setup_teardown(test_log_level_prefix, setup, teardown),
 };
 
 const size_t logger_tests_count = sizeof(logger_tests) / sizeof(logger_tests[0]);
