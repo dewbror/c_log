@@ -66,7 +66,7 @@ static void test_log_message_written(void **state)
     // UNUSED
     (void)state;
 
-    C_LOG_ERROR("Test message: %d", 42);
+    LOG_ERROR("Test message: %d", 42);
     c_log_close();
 
     char buf[BUFFER_SIZE];
@@ -80,11 +80,11 @@ static void test_log_level_prefix(void **state)
     // UNUSED
     (void)state;
 
-    C_LOG_ERROR("Err!");
-    C_LOG_WARN("Warn!");
-    C_LOG_INFO("Info!");
-    C_LOG_DEBUG("Debug!");
-    C_LOG_TRACE("Trace!");
+    LOG_ERROR("Err!");
+    LOG_WARN("Warn!");
+    LOG_INFO("Info!");
+    LOG_DEBUG("Debug!");
+    LOG_TRACE("Trace!");
     c_log_close();
 
     char buf[BUFFER_SIZE];

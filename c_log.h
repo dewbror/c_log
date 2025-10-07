@@ -70,33 +70,33 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 #endif
 
 #if C_LOG_LEVEL >= C_LOG_LEVEL_ERROR
-#define C_LOG_ERROR(...) __c_log__msg(C_LOG_LEVEL_ERROR, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_ERROR(...) __c_log__msg(C_LOG_LEVEL_ERROR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #else
-#define C_LOG_ERROR(...) ((void)0)
+#define LOG_ERROR(...) ((void)0)
 #endif
 
 #if C_LOG_LEVEL >= C_LOG_LEVEL_WARN
-#define C_LOG_WARN(...) __c_log__msg(C_LOG_LEVEL_WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_WARN(...) __c_log__msg(C_LOG_LEVEL_WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #else
-#define C_LOG_WARN(...) ((void)0)
+#define LOG_WARN(...) ((void)0)
 #endif
 
 #if C_LOG_LEVEL >= C_LOG_LEVEL_INFO
-#define C_LOG_INFO(...) __c_log__msg(C_LOG_LEVEL_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_INFO(...) __c_log__msg(C_LOG_LEVEL_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #else
-#define C_LOG_INFO(...) ((void)0)
+#define LOG_INFO(...) ((void)0)
 #endif
 
 #if C_LOG_LEVEL >= C_LOG_LEVEL_DEBUG
-#define C_LOG_DEBUG(...) __c_log__msg(C_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_DEBUG(...) __c_log__msg(C_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #else
-#define C_LOG_DEBUG(...) ((void)0)
+#define LOG_DEBUG(...) ((void)0)
 #endif
 
 #if C_LOG_LEVEL >= C_LOG_LEVEL_TRACE
-#define C_LOG_TRACE(...) __c_log__msg(C_LOG_LEVEL_TRACE, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_TRACE(...) __c_log__msg(C_LOG_LEVEL_TRACE, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #else
-#define C_LOG_TRACE(...) ((void)0)
+#define LOG_TRACE(...) ((void)0)
 #endif
 
 #ifdef C_LOG_IMPLEMENTATION
@@ -120,7 +120,7 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 
 // Global states NOT thread safe!!
 static bool C_LOG_logging_to_file = false;
-static FILE *C_LOG_fp = stderr;
+static FILE *C_LOG_fp = NULL;
 static const char *C_LOG_file_name = NULL;
 
 void c_log_open(const char *const p_file_name)
@@ -130,8 +130,11 @@ void c_log_open(const char *const p_file_name)
         return;
 
     // Null check file_name
-    if(p_file_name == NULL)
+    if(p_file_name == NULL) {
+        C_LOG_logging_to_file = false;
+        C_LOG_fp = stderr;
         return;
+    }
 
     // If file_name != NULL, open it as logging file
     C_LOG_fp = fopen(p_file_name, "w");
@@ -142,7 +145,7 @@ void c_log_open(const char *const p_file_name)
     C_LOG_file_name = p_file_name;
     C_LOG_logging_to_file = true;
 
-    C_LOG_INFO("Log file opened '%s'", C_LOG_file_name);
+    LOG_INFO("Log file opened '%s'", C_LOG_file_name);
 }
 
 void c_log_close(void)
@@ -150,7 +153,7 @@ void c_log_close(void)
     if(!C_LOG_logging_to_file)
         return;
 
-    C_LOG_DEBUG("Attempting to close log file '%s'", C_LOG_file_name);
+    LOG_DEBUG("Attempting to close log file '%s'", C_LOG_file_name);
 
     // Check if log_file is NULL
     if(C_LOG_fp == NULL)
@@ -159,7 +162,7 @@ void c_log_close(void)
     // Close log_file
     int ret = fclose(C_LOG_fp);
     if(ret != 0) {
-        C_LOG_DEBUG("Failed to close log file '%s'", C_LOG_file_name);
+        LOG_DEBUG("Failed to close log file '%s'", C_LOG_file_name);
         return;
     }
 
