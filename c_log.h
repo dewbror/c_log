@@ -21,15 +21,15 @@ extern "C" {
 #define C_LOG_LEVEL_TRACE 4
 
 /*
-Open file 'file_name' for logging, 'file_name' == NULL will set logging to stderr.
-
-\param[in] file_name A string with the name of the log file to open.
-*/
+ * Open file 'file_name' for logging, 'file_name' == NULL will set logging to stderr.
+ *
+ * \param[in] file_name A string with the name of the log file to open.
+ */
 void c_log_open(const char *file_name);
 
 /*
-Close log file.
-*/
+ * Close log file.
+ */
 void c_log_close(void);
 
 // Check for GCC or Clang
@@ -40,19 +40,19 @@ void c_log_close(void);
 #endif
 
 /*
-NOT MEANT TO BE USED! Use C_LOG_ERROR, _INFO, ... etc. instead.
-
-Valid C_LOG_LEVELS are:
-    0: ERROR, 
-    1: WARNING, 
-    2: INFO, 
-    3: DEBUG, 
-    4 to UINT8_MAX: TRACE. 
-
-\param[in] level The C_LOG_LEVEL of the message, 
-\param[in] fmt A printf-style message format string.
-\param[in] ... Additional parameters matching % tokens in the "fmt" string, if any.
-*/
+ * NOT MEANT TO BE USED! Use LOG_ERROR, _INFO, ... etc. instead.
+ *
+ * Valid C_LOG_LEVELS are:
+ *     0: ERROR,
+ *     1: WARNING,
+ *     2: INFO,
+ *     3: DEBUG,
+ *     4 to UINT8_MAX: TRACE.
+ *
+ * \param[in] level The C_LOG_LEVEL of the message,
+ * \param[in] fmt A printf-style message format string.
+ * \param[in] ... Additional parameters matching % tokens in the "fmt" string, if any.
+ */
 void __c_log__msg(const uint8_t level, const char *const file, const int32_t line, const char *const func,
     const char *const fmt, ...) FORMAT_ATTR(5, 6);
 
@@ -118,7 +118,8 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 
 #define C_LOG_LEVEL_COUNT 5
 
-// Global states NOT thread safe!!
+// @TODO: Fix thread safety, global non-consts are not thread safe. Technically logging to stderr is thread safe but we
+// should still make it excplicitly thread safe. My current plan is to make it thread safe with mutexes
 static bool C_LOG_logging_to_file = false;
 static FILE *C_LOG_fp = NULL;
 static const char *C_LOG_file_name = NULL;
@@ -181,7 +182,7 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
     // Null check fp_log
     if(C_LOG_fp == NULL)
         return;
-    
+
     int ret = 0;
     size_t ret_LU = 0;
     const char *color = NULL;
@@ -232,11 +233,12 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
             return;
     }
     else {
-        ret = fprintf(C_LOG_fp, "%s %s%s%s%s ", timebuf, color, levels[level % C_LOG_LEVEL_COUNT], COLOR_RESET, infobuf);
+        ret = fprintf(C_LOG_fp, "%s %s%s%s%s ", timebuf, color, levels[level % C_LOG_LEVEL_COUNT], COLOR_RESET,
+            infobuf);
         if(ret < 0)
             return;
     }
-    
+
     // Null check format string
     if(fmt == NULL)
         goto NEWLINE;
@@ -254,7 +256,6 @@ void __c_log__msg(const uint8_t level, const char *const file, const int32_t lin
 
     // Cleanup va lists
     va_end(args);
-    
 
 NEWLINE:
 
@@ -298,21 +299,21 @@ Version History:
 /*
 Copyright (c) 2025 dewbror <dewbror@gmail.com>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the “Software”), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
-of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */

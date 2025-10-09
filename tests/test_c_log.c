@@ -96,10 +96,10 @@ static void test_log_level_prefix(void **state)
     assert_true(strstr(buf, "[TRC] ") != NULL);
 }
 
-const struct CMUnitTest logger_tests[] = {
+const struct CMUnitTest c_log_tests[] = {
     cmocka_unit_test_setup_teardown(test_log_file_creation, setup, teardown),
     cmocka_unit_test_setup_teardown(test_log_message_written, setup, teardown),
     cmocka_unit_test_setup_teardown(test_log_level_prefix, setup, teardown),
 };
 
-const size_t logger_tests_count = sizeof(logger_tests) / sizeof(logger_tests[0]);
+const size_t c_log_tests_count = sizeof(c_log_tests) / sizeof(c_log_tests[0]);
